@@ -1,0 +1,74 @@
+---
+title: "EDS213_week2_exercise1"
+author: "Joe DeCesaro"
+date: "10/6/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(dataRetrieval)
+library(here)
+library(metajam)
+```
+
+# Exercise 1
+
+```{r}
+siteNumber <- "11118500"
+parameter <- "00060"  # Discharge
+startDate <- ""  
+endDate <- "2020-10-05" 
+
+discharge <- readNWISdv(siteNumber, parameter, startDate, endDate)
+
+discharge <- discharge %>% 
+   rename(x_discharge = X_00060_00003,
+          date = Date)
+```
+
+Plot
+```{r}
+ggplot(data = discharge, aes(x = date, y = x_discharge)) +
+  geom_line()
+```
+
+# Exercise 2
+
+```{r}
+# data_obj <- "https://knb.ecoinformatics.org/knb/d1/mn/v2/object/urn%3Auuid%3A7fc6f6db-c5ea-426a-a743-1f2edafb43b8"
+# path <- here()
+
+# download_d1_data(data_url = data_obj, path = path)
+
+```
+
+Read in the data
+```{r}
+meta_data <- read_csv(here("household_language", "household_language__summary_metadata.csv"))
+
+total_household_data <- read_d1_files(here("household_language"))
+
+hh_data <- total_household_data$data
+```
+
+Write a piece of code that will compute the percentage of Alaskan household speaking only English for the year 2009 to 2015
+```{r}
+only_english <- hh_data %>% 
+  filter(Year >= 2009,
+         Year <= 2015,
+         !total == 0) %>% 
+  mutate(eng_pct = speak_only_english/total) %>% 
+  select(Year, SASAP.Region, city, total,speak_only_english,eng_pct) %>% 
+  group_by(Year) %>% 
+  summarise(pct_average = mean(eng_pct))
+
+ggplot(only_english, aes(x = Year, y = pct_average)) + 
+  geom_line()
+```
+
+
