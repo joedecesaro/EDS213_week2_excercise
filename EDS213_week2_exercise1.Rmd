@@ -19,21 +19,21 @@ library(metajam)
 # Exercise 1
 
 ```{r}
-siteNumber <- "11118500"
-parameter <- "00060"  # Discharge
-startDate <- ""  
-endDate <- "2020-10-05" 
+siteNumber_VT <- "11118500"
+parameter_VT <- "00060"  # Discharge
+startDate_VT <- "2000-10-05"  
+endDate_VT <- "2020-10-05" 
 
-discharge <- readNWISdv(siteNumber, parameter, startDate, endDate)
+discharge_VT <- readNWISdv(siteNumber_VT, parameter_VT, startDate_VT, endDate_VT)
 
-discharge <- discharge %>% 
+discharge_VT <- discharge_VT %>% 
    rename(x_discharge = X_00060_00003,
           date = Date)
 ```
 
 Plot
 ```{r}
-ggplot(data = discharge, aes(x = date, y = x_discharge)) +
+ggplot(data = discharge_VT, aes(x = date, y = x_discharge)) +
   geom_line()
 ```
 
@@ -69,6 +69,56 @@ only_english <- hh_data %>%
 
 ggplot(only_english, aes(x = Year, y = pct_average)) + 
   geom_line()
+```
+
+# Assignment 2.1
+
+1)
+```{r}
+siteNumber_SP <- "11113500"
+parameter_SP <- "00060"  # Discharge
+startDate_SP <- "2021-10-04T00:00Z"
+endDate_SP <- "2021-10-05T00:00Z"
+
+discharge_SP_VT <- readNWISuv(c(siteNumber_SP, siteNumber_VT), 
+                           parameterCd = parameter_SP, 
+                           startDate = startDate_SP, 
+                           endDate = endDate_SP)
+
+discharge_SP_VT <- discharge_SP_VT %>% 
+   renameNWISColumns()
+
+```
+
+2) The best way to query multiple sites for the R package would be to concatenate the two site numbers to call both in at the same time in one dataframe. (SP = Santa Paula, VT = Ventura)
+
+3)
+```{r}
+ggplot(data = discharge_SP_VT, aes(x = dateTime, y = Flow_Inst)) +
+  geom_point(aes(color = site_no)) +
+  scale_color_discrete(name  = "Site",
+                    labels = c("Santa Paula", "Ventura"))
+```
+The flow peaked around noon to 13:00 for both locations. Ventura had greater flow overall.
+
+# Assignment 2.2
+
+See final graph below, this part was completed in class and the code is above in exercise 2.
+```{r}
+ggplot(only_english, aes(x = Year, y = pct_average)) + 
+  geom_line()
+```
+
+Let's try to compare it to the households that speak French. This part is done assumming that the "french_or_french_creole" captures all french speaking households.
+```{r}
+french <- hh_data %>% 
+  filter(Year >= 2009,
+         Year <= 2015,
+         !total == 0) %>% 
+  mutate(frn_pct = french_or_french_creole/total) %>% 
+  select(Year, SASAP.Region, city, total,french_or_french_creole,frn_pct) %>% 
+  group_by(Year) %>% 
+  summarise(pct_average = mean(frn_pct))
 ```
 
 
